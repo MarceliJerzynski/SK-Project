@@ -3114,10 +3114,10 @@
 1562683909 source:c:\users\marceli\documents\studia\sk\racinggameclient\src\track.cpp
 	"Track.h"
 
-1578326806 source:c:\users\mateusz\desktop\sk-project\racinggameclient\src\car.cpp
+1578338997 source:c:\users\mateusz\desktop\sk-project\racinggameclient\src\car.cpp
 	"Car.h"
 
-1578326806 c:\users\mateusz\desktop\sk-project\racinggameclient\include\car.h
+1578340486 c:\users\mateusz\desktop\sk-project\racinggameclient\include\car.h
 	<GL/glew.h>
 	<GLFW/glfw3.h>
 	<glm/glm.hpp>
@@ -4075,14 +4075,20 @@
 	<iostream>
 	<vector>
 
-1578326806 source:c:\users\mateusz\desktop\sk-project\racinggameclient\src\game.cpp
+1578340454 source:c:\users\mateusz\desktop\sk-project\racinggameclient\src\game.cpp
 	"Game.h"
+	<iostream>
 
-1578326806 c:\users\mateusz\desktop\sk-project\racinggameclient\include\game.h
+1578340540 c:\users\mateusz\desktop\sk-project\racinggameclient\include\game.h
 	<GL/glew.h>
 	<GLFW/glfw3.h>
 	<glm/glm.hpp>
 	<glm/gtc/type_ptr.hpp>
+	<windows.h>
+	<winsock2.h>
+	<ws2tcpip.h>
+	<stdlib.h>
+	<stdio.h>
 	<cmath>
 	<vector>
 	"constants.h"
@@ -4109,7 +4115,7 @@
 	<stdlib.h>
 	<fstream>
 
-1578326806 source:c:\users\mateusz\desktop\sk-project\racinggameclient\src\main_file.cpp
+1578332874 source:c:\users\mateusz\desktop\sk-project\racinggameclient\src\main_file.cpp
 	<GL/glew.h>
 	<GLFW/glfw3.h>
 	<glm/glm.hpp>
