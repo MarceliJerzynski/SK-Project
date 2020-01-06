@@ -39,6 +39,8 @@ char * getMessage(int fd)
     char *msg = new char[AMOUNT_OF_CHAR_IN_MSG]; 
     char oneChar;
     int i = 0;
+    read(fd, &oneChar, 1);
+    msg[i++] = oneChar;
     while (oneChar != '\n') {
         read(fd, &oneChar, 1);
         msg[i] = oneChar;
@@ -51,14 +53,13 @@ char * getMessage(int fd)
 //wskaźnik na funkcję opisującą zachowanie wątku
 void *ThreadBehavior(void *t_data)  //odbieranie  
 {
-    cout<<"Utworzylem watek"<<endl;
     struct thread_data_t *th_data = (struct thread_data_t*)t_data;
     
     char *msg = new char[AMOUNT_OF_CHAR_IN_MSG];
    while(1)
    {
-      //msg = getMessage(th_data->socket);
-      read(th_data->socket, &msg, AMOUNT_OF_CHAR_IN_MSG);
+      strcpy(msg, getMessage(th_data->socket));
+    //   read(th_data->socket, &msg, AMOUNT_OF_CHAR_IN_MSG);
       cout<<msg<<endl;
    }
 
@@ -69,7 +70,6 @@ void *ThreadBehavior(void *t_data)  //odbieranie
 //funkcja obsługująca połączenie z serwerem
 void handleConnection(int connection_socket_descriptor) {   //wysylanie
     //wynik funkcji tworzącej wątek
-    cout<<"Jestem w HandleConnection"<<endl;
     int create_result = 0;
 
     //uchwyt na wątek
@@ -85,12 +85,13 @@ void handleConnection(int connection_socket_descriptor) {   //wysylanie
        exit(-1);
     }
     char *msg = new char[AMOUNT_OF_CHAR_IN_MSG];
+    char ch = '\n';
     while(1)
     {
       cin>>msg;
+      strncat(msg, &ch, 1); 
       //sendMessage(connection_socket_descriptor, msg);
       write(connection_socket_descriptor, msg, strlen(msg));
-      cout<<msg<<endl;
     }
 
     //TODO (przy zadaniu 1) odbieranie -> wyświetlanie albo klawiatura -> wysyłanie
@@ -137,6 +138,7 @@ int main (int argc, char *argv[])
    }
 
    handleConnection(connection_socket_descriptor);
+
 
    close(connection_socket_descriptor);
 

@@ -14,7 +14,7 @@
 #include <iostream>
 using namespace std;
 
-#define SERVER_PORT 1105
+#define SERVER_PORT 1131
 #define QUEUE_SIZE 5
 const int AMOUNT_OF_CHAR_IN_MSG = 256;
 const int AMOUNT_OF_PLAYERS = 2;
@@ -32,8 +32,6 @@ void sendMessage(int fd, char *msg)
     {
         write(fd, &msg[i], sizeof(char));
     }
-    cout<<"Wyslalem wiadomosc: ";
-    cout<<msg<<endl;
 }
 
 
@@ -43,22 +41,22 @@ char * getMessage(int fd)
     char *msg = new char[AMOUNT_OF_CHAR_IN_MSG]; 
     char oneChar;
     int i = 0;
+    read(fd, &oneChar, 1);
+    msg[i++] = oneChar;
     while (oneChar != '\n') {
         read(fd, &oneChar, 1);
         msg[i] = oneChar;
         i++;
     }
-    cout<<"Odebralem wiadomosc: ";
-    cout<<msg<<endl;
     return msg;
     
 }
 
 
+
 //funkcja opisującą zachowanie wątku - musi przyjmować argument typu (void *) i zwracać (void *)
 void *ThreadBehavior(void *t_data)
 {
-    cout<<"Stworzylem watek"<<endl;
     pthread_detach(pthread_self());
     struct thread_data_t *th_data = (struct thread_data_t*)t_data;
     int clients_sockets[AMOUNT_OF_PLAYERS];
@@ -67,17 +65,22 @@ void *ThreadBehavior(void *t_data)
         clients_sockets[i]= th_data->clients_sockets[i]; 
     }
     char *msg[AMOUNT_OF_PLAYERS];
+    
     for(int i = 0; i < AMOUNT_OF_PLAYERS; i++)
     {
+        
         msg[i] = new char[AMOUNT_OF_CHAR_IN_MSG];
     }
+
+
+    //------------------------------------------------------------------------------
     while(1)
     {
         for(int i = 0; i < AMOUNT_OF_PLAYERS; i++)  //pobierz wszystkie wiadomosci od graczy
         {
-            //msg[i] = getMessage(clients_sockets[i]);
-            read(clients_sockets[i], &msg[i], AMOUNT_OF_CHAR_IN_MSG);
-            cout<<msg[i];
+            //read(clients_sockets[i], &msg[i], strlen(msg[i]));
+            msg[i] = getMessage(clients_sockets[i]);
+            cout<<"Odczytalem wiadomosc: "<<msg[i]<<endl;
         }
         
         for(int i = 0; i < AMOUNT_OF_PLAYERS; i++)  //dla kazdego gracza
@@ -85,7 +88,9 @@ void *ThreadBehavior(void *t_data)
             for(int j = 0; j< AMOUNT_OF_PLAYERS; j++)   //dla kazdej wiadomosci
             {
                 //sendMessage(clients_sockets[i], msg[j]);    //zamiast msg[j] bedzie kurna stan samochodu j-tego
+                        cout<<"Zaczynam wysylanie wiadomosci: "<<msg[j]<<endl;
                       write(clients_sockets[i], msg[j], strlen(msg[j]));
+                      cout<<"Wyslalem: "<<msg[j]<<endl;
 
             }
         }
@@ -98,7 +103,6 @@ void *ThreadBehavior(void *t_data)
 
 //funkcja obsługująca połączenie z nowym klientem
 void handleConnection(int clients_sockets[]) {
-    cout<<"Jestem w handleConnection"<<endl;
     //wynik funkcji tworzącej wątek
     int create_result = 0;
 
