@@ -212,7 +212,7 @@ void Car::move(int going)
     RLW->setPosition(aposition);
 
 
-//operacje krêcenia ko³em
+//operacje krï¿½cenia koï¿½em
 //----------------------------------------------------------------------------------------------------------------------
 FLW->rotateX(-v*100);
 FRW->rotateX(-v*100);

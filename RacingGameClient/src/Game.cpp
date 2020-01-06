@@ -1,4 +1,24 @@
 #include "Game.h"
+#define WIN32_LEAN_AND_MEAN
+
+#include <windows.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <stdlib.h>
+#include <stdio.h>
+  
+// Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
+#pragma comment (lib, "Ws2_32.lib")
+#pragma comment (lib, "Mswsock.lib")
+#pragma comment (lib, "AdvApi32.lib")
+
+
+#define DEFAULT_BUFLEN 512
+#define DEFAULT_PORT "27015"
+#include <iostream>
+
+using namespace std;
+
 
 Game::Game()
 {
@@ -74,11 +94,15 @@ void Game::run(GLFWwindow* window, ShaderProgram *pointer)
 
     setCamera(V, player);
 	glfwSetTime(0); //Zeruj timer
+    
 
+    SOCKET socket = getConnectionSocket("192.168.0.15");
 //Pêtla g³ówna gry
 //----------------------------------------------------------------------------------------------------------------------
 	while (!glfwWindowShouldClose(window)) //Tak d³ugo jak okno nie powinno zostaæ zamkniête
-	{
+	{   
+        sendKeyInfoToServer(socket);
+        getInfoFromServer(socket);
         glfwSetTime(0); //Zeruj timer
 		drawScene(window, V, P, cube,track, player, tree, enemy); //Wykonaj procedurê rysuj¹c¹
         moving(V, player);                                   //wykonaj procedurê odpowiajaj¹ca za poruszanie graczem oraz kamer¹
@@ -177,7 +201,7 @@ void Game::drawScene(GLFWwindow* window,mat4 &V, mat4 &P, Object &cube,Object &t
 
     glfwSwapBuffers(window); //Przerzuæ tylny bufor na przedni
 }
-
+ 
 
 void Game::moving(mat4 &V,  Car &player)
 {
@@ -286,6 +310,100 @@ void Game::moving(mat4 &V,  Car &player)
 
 }
 
+
+SOCKET getConnectionSocket(const char* serverName){
+	
+    WSADATA wsaData;
+    SOCKET ConnectSocket = INVALID_SOCKET;
+    struct addrinfo *result = NULL,
+                    *ptr = NULL,
+                    hints;
+    const char *sendbuf = "this is a test";
+    char recvbuf[DEFAULT_BUFLEN];
+    int iResult;
+    int recvbuflen = DEFAULT_BUFLEN;
+    
+
+    // Initialize Winsock
+    iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
+    if (iResult != 0) {
+        printf("WSAStartup failed with error: %d\n", iResult);
+        return 1;
+    }
+
+    ZeroMemory( &hints, sizeof(hints) );
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+
+    // Resolve the server address and port
+    iResult = getaddrinfo(serverName, DEFAULT_PORT, &hints, &result);
+    if ( iResult != 0 ) {
+        printf("getaddrinfo failed with error: %d\n", iResult);
+        WSACleanup();
+        return 1;
+    }
+
+    // Attempt to connect to an address until one succeeds
+    for(ptr=result; ptr != NULL ;ptr=ptr->ai_next) {
+
+        // Create a SOCKET for connecting to server
+        ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype, 
+            ptr->ai_protocol);
+        if (ConnectSocket == INVALID_SOCKET) {
+            printf("socket failed with error: %ld\n", WSAGetLastError());
+            WSACleanup();
+            return 1;
+        }
+
+        // Connect to server.
+        iResult = connect( ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
+        if (iResult == SOCKET_ERROR) {
+            closesocket(ConnectSocket);
+            ConnectSocket = INVALID_SOCKET;
+            continue;
+        }
+        break;
+    }
+
+    freeaddrinfo(result);
+
+    if (ConnectSocket == INVALID_SOCKET) {
+        printf("Unable to connect to server!\n");
+        WSACleanup();
+        return 1;
+	}
+    return ConnectSocket;
+		
+}
+
+
+void Game::sendKeyInfoToServer(SOCKET ConnectSocket){
+    string msg= "";
+    msg = turnLeft ? msg+"turnLeft;":msg;
+    msg = turnRight ? msg+"turnRight;":msg;
+    msg = goPlayer ? msg+"goPlayer;":msg;
+    msg = backPlayer ? msg+"backPlayer;":msg;
+    msg = msg + "\n";
+    
+
+    int iResult;
+    iResult = send( ConnectSocket,msg.c_str(), (int)strlen(msg.c_str()), 0 );
+}
+
+void Game::getInfoFromServer(SOCKET ConnectSocket){
+    char* msg = new char[256];
+    char recvbuf;
+    recv(ConnectSocket, &recvbuf, 1, 0);
+    int i = 0;
+    msg[i++] = recvbuf;
+    while(recvbuf != '\n'){
+        recv(ConnectSocket, &recvbuf, 1, 0);
+        msg[i] = recvbuf;
+        i++;
+    }
+    cout << msg;
+}
 
 void Game::game( Object &cube, Object &track,Car &player,Object tree[amount_of_trees], Car &enemy)
 {

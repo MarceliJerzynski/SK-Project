@@ -42,7 +42,9 @@ class Game
         void drawScene(GLFWwindow* window,mat4 &V, mat4 &P, Object &cube,Object &track, Car &player, Object tree[amount_of_trees], Car &enemy);
         void moving(mat4 &V,  Car &player);
         void game( Object &cube, Object &track,Car &player,Object tree[amount_of_trees], Car &enemy);
-
+        SOCKET getConnectionSocket(const char* serverName);
+        void sendKeyInfoToServer(SOCKET ConnectSocket);
+        void getInfoFromServer(SOCKET ConnectSocket);
         float distance_to_player;
         float pitch_angle;
         float angle_around_player;
