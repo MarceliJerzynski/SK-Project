@@ -15,6 +15,10 @@
 
 #define DEFAULT_BUFLEN 512
 #define DEFAULT_PORT "27015"
+#include <iostream>
+
+using namespace std;
+
 
 Game::Game()
 {
@@ -90,11 +94,15 @@ void Game::run(GLFWwindow* window, ShaderProgram *pointer)
 
     setCamera(V, player);
 	glfwSetTime(0); //Zeruj timer
+    
 
+    SOCKET socket = getConnectionSocket("192.168.0.15");
 //Pêtla g³ówna gry
 //----------------------------------------------------------------------------------------------------------------------
 	while (!glfwWindowShouldClose(window)) //Tak d³ugo jak okno nie powinno zostaæ zamkniête
-	{
+	{   
+        sendKeyInfoToServer(socket);
+        getInfoFromServer(socket);
         glfwSetTime(0); //Zeruj timer
 		drawScene(window, V, P, cube,track, player, tree, enemy); //Wykonaj procedurê rysuj¹c¹
         moving(V, player);                                   //wykonaj procedurê odpowiajaj¹ca za poruszanie graczem oraz kamer¹
@@ -303,7 +311,7 @@ void Game::moving(mat4 &V,  Car &player)
 }
 
 
-SOCKET getConnectionSocket(char* serverName){
+SOCKET getConnectionSocket(const char* serverName){
 	
     WSADATA wsaData;
     SOCKET ConnectSocket = INVALID_SOCKET;
@@ -383,8 +391,18 @@ void Game::sendKeyInfoToServer(SOCKET ConnectSocket){
     iResult = send( ConnectSocket,msg.c_str(), (int)strlen(msg.c_str()), 0 );
 }
 
-void Game::getInfoFromServer(SOCKET ConnectSocke){
-    //Tutaj odbieram rzeczy i co z nimi?? 
+void Game::getInfoFromServer(SOCKET ConnectSocket){
+    char* msg = new char[256];
+    char recvbuf;
+    recv(ConnectSocket, &recvbuf, 1, 0);
+    int i = 0;
+    msg[i++] = recvbuf;
+    while(recvbuf != '\n'){
+        recv(ConnectSocket, &recvbuf, 1, 0);
+        msg[i] = recvbuf;
+        i++;
+    }
+    cout << msg;
 }
 
 void Game::game( Object &cube, Object &track,Car &player,Object tree[amount_of_trees], Car &enemy)
