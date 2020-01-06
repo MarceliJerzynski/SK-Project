@@ -8,13 +8,15 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <time.h>
 #include <pthread.h>
 #include <iostream>
+#include <cstring>
+#include "glm/glm.hpp"
+#include "Car.h"
 using namespace std;
-
-#define SERVER_PORT 1131
+using namespace glm;
+#define SERVER_PORT 1132
 #define QUEUE_SIZE 5
 const int AMOUNT_OF_CHAR_IN_MSG = 256;
 const int AMOUNT_OF_PLAYERS = 2;
@@ -24,15 +26,150 @@ struct thread_data_t
 int clients_sockets[AMOUNT_OF_PLAYERS];
 };
 
+bool turnLeft = false;
+bool turnRight = false;
+bool goPlayer = false;
+bool backPlayer = false;
 
-//jak nazwa wskazuje
-void sendMessage(int fd, char *msg)
+
+void checkMessage(char *msg)
 {
-    for (int i = 0; i < sizeof(msg)/sizeof(char); i++)
+    string text(msg);
+    int position = text.find("turnLeft");
+    if (position == strlen(msg)) 
     {
-        write(fd, &msg[i], sizeof(char));
+        turnLeft = false;
+    }
+    else
+    {
+        turnLeft = true;
+    }
+
+     position = text.find("turnRight");
+    if (position == strlen(msg)) 
+    {
+        turnRight = false;
+    }
+    else
+    {
+        turnRight = true;
+    }
+
+     position = text.find("goPlayer");
+    if (position == strlen(msg)) 
+    {
+        goPlayer = false;
+    }
+    else
+    {
+        goPlayer = true;
+    }
+
+     position = text.find("backPlayer");
+    if (position == strlen(msg)) 
+    {
+        backPlayer = false;
+    }
+    else
+    {
+        backPlayer = true;
     }
 }
+
+
+void turning(Car &player)
+{
+
+    if (player.isMoving() == 1)    //jesli jedzie do przodu
+    {
+        if (turnLeft)   //i jednoczesnie A
+        {
+            player.turnLeft();    //skrec gracza
+        } else
+        if (turnRight)
+        {
+            player.turnRight();
+        }
+    }
+    if (player.isMoving() == -1)
+    {
+            if (turnLeft)
+            {
+                player.turnRight();
+            } else
+            if (turnRight)
+            {
+                player.turnLeft();
+            }
+            
+    }
+}
+
+void turningWheels(Car &player)
+{
+    if (turnLeft)
+        {
+            player.turnWheelLeft();
+        }
+        if (turnRight)
+        {
+            player.turnWheelRight();
+        }
+        if (!turnLeft && !turnRight)  //prostuj ko³a
+        {
+            if (player.getWheelRotation() > 0)
+            {
+                player.turnWheelRight();
+            }
+            if (player.getWheelRotation() < 0)
+            {
+                player.turnWheelLeft();
+            }
+        }
+}
+
+void going(Car &player)
+{
+    if (goPlayer)       //jesli trzyma W
+    {
+        player.move(1);  //rusz gracza
+    } else
+    if (backPlayer)     //jesli trzyma S
+    {
+        player.move(2);
+    } else
+    {
+        player.move(0);
+    }
+}
+
+void moving(Car &player)
+{
+    turning(player);
+    turningWheels(player);
+    going(player);
+}
+
+const char * logic(Car &player) 
+{
+    string msg;
+    moving(player);
+    bool checkpointReached = player.checkpointReached();
+    vec3 position = player.getPosition();
+    float wheelRotation = player.getWheelRotation();
+    float rotation = player.getRotation(); 
+    msg = "checkPointedReached"+to_string(checkpointReached)+";";
+    msg+= "wheelRotation="+to_string(wheelRotation)+";";
+    msg+= "rotation="+to_string(rotation)+";";
+    msg+= "position="+to_string(position.x);
+    msg+= ","+to_string(position.y);
+    msg+= ","+to_string(position.z);
+    const char * returningValue = new char[AMOUNT_OF_CHAR_IN_MSG];
+    returningValue = msg.c_str();
+    return returningValue;
+}
+
+
 
 
 //jak nazwa wskazuje
@@ -72,29 +209,28 @@ void *ThreadBehavior(void *t_data)
         msg[i] = new char[AMOUNT_OF_CHAR_IN_MSG];
     }
 
-
+    Car car[2];
     //------------------------------------------------------------------------------
     while(1)
     {
         for(int i = 0; i < AMOUNT_OF_PLAYERS; i++)  //pobierz wszystkie wiadomosci od graczy
         {
-            //read(clients_sockets[i], &msg[i], strlen(msg[i]));
             msg[i] = getMessage(clients_sockets[i]);
             cout<<"Odczytalem wiadomosc: "<<msg[i]<<endl;
         }
         
-        for(int i = 0; i < AMOUNT_OF_PLAYERS; i++)  //dla kazdego gracza
-        {
-            for(int j = 0; j< AMOUNT_OF_PLAYERS; j++)   //dla kazdej wiadomosci
-            {
-                //sendMessage(clients_sockets[i], msg[j]);    //zamiast msg[j] bedzie kurna stan samochodu j-tego
-                        cout<<"Zaczynam wysylanie wiadomosci: "<<msg[j]<<endl;
-                      write(clients_sockets[i], msg[j], strlen(msg[j]));
-                      cout<<"Wyslalem: "<<msg[j]<<endl;
 
+        for(int i = 0; i < AMOUNT_OF_PLAYERS; i++)  //dla kazdej wiadomosci
+        {
+            checkMessage(msg[i]);   //uzupelnij zmienne booloweskie
+
+            for(int j = 0; j< AMOUNT_OF_PLAYERS; j++)   //dla kazdeego gracza
+            {
+                const char * message = logic(car[i]);   //wykonaj poruszanie sie gracza
+                write(clients_sockets[j], message, strlen(message));
+                cout<<"Wyslalem: "<<msg[j]<<endl;
             }
         }
-            
     }
     
     pthread_exit(NULL);
@@ -202,6 +338,7 @@ int main()
             check_client(connection_socket_descriptor);  //sprawdz utworzenie gniazda, jesli cos poszlo nie tak wylacz program, malo prawdp sytuacja
 
             clients_sockets[i] = connection_socket_descriptor;  //dodaj gniazdo do tablicy
+            cout<<"Klient "<<clients_sockets[i]<<" dolaczyl do wspaniej gry RacingGame! Witamy na pokladzie ;D :*"<<endl;
         }
         
         handleConnection(clients_sockets); //wyslij tablicę
@@ -211,6 +348,5 @@ int main()
     close(server_socket_descriptor);    //no widac co robi, co nie? :D 
     return(0);
 }
-
 
 
