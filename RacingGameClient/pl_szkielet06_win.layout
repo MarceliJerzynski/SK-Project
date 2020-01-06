@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<FileVersion major="1" minor="0" />
+	<ActiveTarget name="Debug" />
+	<File name="include\Object.h" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1846" topLine="36" />
+		</Cursor>
+	</File>
+	<File name="include\constants.h" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="918" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\Markup.cpp" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="848" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\shaderprogram.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="0" topLine="9" />
+		</Cursor>
+	</File>
+	<File name="vertex.glsl" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="803" topLine="1" />
+		</Cursor>
+	</File>
+	<File name="src\main_file.cpp" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="652" topLine="32" />
+		</Cursor>
+		<Folding>
+			<Collapse line="24" />
+			<Collapse line="30" />
+			<Collapse line="36" />
+			<Collapse line="43" />
+			<Collapse line="54" />
+			<Collapse line="61" />
+		</Folding>
+	</File>
+	<File name="src\Object.cpp" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1122" topLine="6" />
+		</Cursor>
+		<Folding>
+			<Collapse line="13" />
+			<Collapse line="26" />
+			<Collapse line="37" />
+			<Collapse line="42" />
+			<Collapse line="47" />
+			<Collapse line="52" />
+			<Collapse line="58" />
+		</Folding>
+	</File>
+	<File name="src\Game.cpp" open="1" top="0" tabpos="9" split="0" active="1" splitpos="614" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="9328" topLine="29" />
+		</Cursor>
+		<Folding>
+			<Collapse line="3" />
+			<Collapse line="17" />
+			<Collapse line="36" />
+			<Collapse line="94" />
+			<Collapse line="114" />
+			<Collapse line="120" />
+			<Collapse line="141" />
+			<Collapse line="182" />
+		</Folding>
+	</File>
+	<File name="include\Car.h" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1386" topLine="15" />
+		</Cursor>
+	</File>
+	<File name="fragment.glsl" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="559" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="include\Game.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="378" topLine="15" />
+		</Cursor>
+	</File>
+	<File name="include\shaderprogram.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="0" topLine="20" />
+		</Cursor>
+	</File>
+	<File name="include\Markup.h" open="1" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="146" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\Car.cpp" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="7415" topLine="46" />
+		</Cursor>
+		<Folding>
+			<Collapse line="8" />
+			<Collapse line="55" />
+			<Collapse line="60" />
+			<Collapse line="65" />
+			<Collapse line="70" />
+			<Collapse line="75" />
+			<Collapse line="88" />
+			<Collapse line="101" />
+			<Collapse line="110" />
+			<Collapse line="119" />
+			<Collapse line="141" />
+			<Collapse line="231" />
+			<Collapse line="236" />
+			<Collapse line="248" />
+			<Collapse line="253" />
+			<Collapse line="270" />
+		</Folding>
+	</File>
+</CodeBlocks_layout_file>
