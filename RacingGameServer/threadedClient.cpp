@@ -1,15 +1,26 @@
-#include <pthread.h>
+#define WIN32_LEAN_AND_MEAN
+
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
+#include <winsock2.h>
+// #include <netinet/in.h>
+#include <WS2tcpip.h>
+#include <windows.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <stdio.h>
 #include <iostream>
 using namespace std;
+
+#pragma comment (lib, "Ws2_32.lib")
+#pragma comment (lib, "Mswsock.lib")
+#pragma comment (lib, "AdvApi32.lib")
+
+
+#define DEFAULT_BUFLEN 512
+#define DEFAULT_PORT "1132"
 
 #define BUF_SIZE 1024
 #define NUM_THREADS     5
@@ -28,7 +39,7 @@ void sendMessage(int fd, char *msg)
 {
     for (int i = 0; i < sizeof(msg)/sizeof(char); i++)
     {
-        write(fd, &msg[i], sizeof(char));
+        send(fd, &msg[i], sizeof(char), 0);
     }
 }
 
@@ -39,10 +50,10 @@ char * getMessage(int fd)
     char *msg = new char[AMOUNT_OF_CHAR_IN_MSG]; 
     char oneChar;
     int i = 0;
-    read(fd, &oneChar, 1);
+    recv(fd, &oneChar, 1, 0);
     msg[i++] = oneChar;
     while (oneChar != '\n') {
-        read(fd, &oneChar, 1);
+        recv(fd, &oneChar, 1 , 0);
         msg[i] = oneChar;
         i++;
     }
@@ -50,40 +61,24 @@ char * getMessage(int fd)
     
 }
 
-//wskaźnik na funkcję opisującą zachowanie wątku
-void *ThreadBehavior(void *t_data)  //odbieranie  
-{
-    struct thread_data_t *th_data = (struct thread_data_t*)t_data;
-    
-    char *msg = new char[AMOUNT_OF_CHAR_IN_MSG];
-   while(1)
-   {
-      strcpy(msg, getMessage(th_data->socket));
-    //   read(th_data->socket, &msg, AMOUNT_OF_CHAR_IN_MSG);
-      cout<<msg<<endl;
-   }
-
-    pthread_exit(NULL);
-}
-
 
 //funkcja obsługująca połączenie z serwerem
 void handleConnection(int connection_socket_descriptor) {   //wysylanie
     //wynik funkcji tworzącej wątek
-    int create_result = 0;
+    //int create_result = 0;
 
     //uchwyt na wątek
-    pthread_t thread1;
+    //pthread_t thread1;
 
     //dane, które zostaną przekazane do wątku
-    struct thread_data_t t_data;
-    t_data.socket = connection_socket_descriptor;
+    //struct thread_data_t t_data;
+    //t_data.socket = connection_socket_descriptor;
     //TODO
-    create_result = pthread_create(&thread1, NULL, ThreadBehavior, (void *)&t_data);
-    if (create_result){
-       printf("Błąd przy próbie utworzenia wątku, kod błędu: %d\n", create_result);
-       exit(-1);
-    }
+    //create_result = pthread_create(&thread1, NULL, ThreadBehavior, (void *)&t_data);
+    //if (create_result){
+    //   printf("Błąd przy próbie utworzenia wątku, kod błędu: %d\n", create_result);
+    //   exit(-1);
+    //}
     char *msg = new char[AMOUNT_OF_CHAR_IN_MSG];
     char ch = '\n';
     while(1)
@@ -91,7 +86,16 @@ void handleConnection(int connection_socket_descriptor) {   //wysylanie
       cin>>msg;
       strncat(msg, &ch, 1); 
       //sendMessage(connection_socket_descriptor, msg);
-      write(connection_socket_descriptor, msg, strlen(msg));
+      send(connection_socket_descriptor, msg, strlen(msg), 0);
+
+      char *msg = new char[AMOUNT_OF_CHAR_IN_MSG];
+      for(int i = 0; i < AMOUNT_OF_PLAYERS; i++)
+      {
+        strcpy(msg, getMessage(connection_socket_descriptor));
+      
+        cout<<msg<<endl;
+      }
+
     }
 
     //TODO (przy zadaniu 1) odbieranie -> wyświetlanie albo klawiatura -> wysyłanie
@@ -99,50 +103,79 @@ void handleConnection(int connection_socket_descriptor) {   //wysylanie
 
 
 int main (int argc, char *argv[])
-{
-   int connection_socket_descriptor;
-   int connect_result;
-   struct sockaddr_in server_address;
-   struct hostent* server_host_entity;
+{ 
+   
+   
+    WSADATA wsaData;
+    SOCKET ConnectSocket = INVALID_SOCKET;
+    struct addrinfo *result = NULL,
+                    *ptr = NULL,
+                    hints;
+    const char *sendbuf = "this is a test";
+    char recvbuf[DEFAULT_BUFLEN];
+    int iResult;
+    int recvbuflen = DEFAULT_BUFLEN;
+    
+    // Validate the parameters
+    if (argc != 2) {
+        printf("usage: %s server-name\n", argv[0]);
+        return 1;
+    }
 
-   if (argc != 3)
-   {
-     fprintf(stderr, "Sposób użycia: %s server_name port_number\n", argv[0]);
-     exit(1);
-   }
+    // Initialize Winsock
+    iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
+    if (iResult != 0) {
+        printf("WSAStartup failed with error: %d\n", iResult);
+        return 1;
+    }
 
-   server_host_entity = gethostbyname(argv[1]);
-   if (! server_host_entity)
-   {
-      fprintf(stderr, "%s: Nie można uzyskać adresu IP serwera.\n", argv[0]);
-      exit(1);
-   }
+    ZeroMemory( &hints, sizeof(hints) );
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
 
-   connection_socket_descriptor = socket(PF_INET, SOCK_STREAM, 0);
-   if (connection_socket_descriptor < 0)
-   {
-      fprintf(stderr, "%s: Błąd przy probie utworzenia gniazda.\n", argv[0]);
-      exit(1);
-   }
+    // Resolve the server address and port
+    iResult = getaddrinfo(argv[1], DEFAULT_PORT, &hints, &result);
+    if ( iResult != 0 ) {
+        printf("getaddrinfo failed with error: %d\n", iResult);
+        WSACleanup();
+        return 1;
+    }
 
-   memset(&server_address, 0, sizeof(struct sockaddr));
-   server_address.sin_family = AF_INET;
-   memcpy(&server_address.sin_addr.s_addr, server_host_entity->h_addr, server_host_entity->h_length);
-   server_address.sin_port = htons(atoi(argv[2]));
+    // Attempt to connect to an address until one succeeds
+    for(ptr=result; ptr != NULL ;ptr=ptr->ai_next) {
 
-   connect_result = connect(connection_socket_descriptor, (struct sockaddr*)&server_address, sizeof(struct sockaddr));
-   if (connect_result < 0)
-   {
-      fprintf(stderr, "%s: Błąd przy próbie połączenia z serwerem (%s:%i).\n", argv[0], argv[1], atoi(argv[2]));
-      exit(1);
-   }
+        // Create a SOCKET for connecting to server
+        ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype, 
+            ptr->ai_protocol);
+        if (ConnectSocket == INVALID_SOCKET) {
+            printf("socket failed with error: %ld\n", WSAGetLastError());
+            WSACleanup();
+            return 1;
+        }
 
-   handleConnection(connection_socket_descriptor);
+        // Connect to server.
+        iResult = connect( ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
+        if (iResult == SOCKET_ERROR) {
+            closesocket(ConnectSocket);
+            ConnectSocket = INVALID_SOCKET;
+            continue;
+        }
+        break;
+    }
+
+    freeaddrinfo(result);
+
+    if (ConnectSocket == INVALID_SOCKET) {
+        printf("Unable to connect to server!\n");
+        WSACleanup();
+        return 1;
+    }    
+   handleConnection(ConnectSocket);
 
 
-   close(connection_socket_descriptor);
+   closesocket(ConnectSocket);
 
 
    return 0;
-
 }

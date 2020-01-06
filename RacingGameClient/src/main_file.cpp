@@ -10,7 +10,6 @@
 #include <windows.h>
 using namespace glm;
 using namespace std;
-
 const char* title = "Racing Game";
 Game game;
 float aspectRatio=1;
@@ -91,8 +90,12 @@ GLFWwindow* openGlstuff()
 	return window;
 }
 
+
+
 int main(void)
-{
+{	
+
+	
     GLFWwindow* window;
     window = openGlstuff();
 
